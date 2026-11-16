@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>消失的學生：校園防疫迷蹤（內新國小版）</title>
+<title>消失的學生：校園迷蹤（內新國小版）</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;700&family=Inter:wght@400;700&family=Lacquer&family=Press+Start+2P&family=Quantico:wght@400;700&family=Schibsted+Grotesk:wght@400;700&family=VT323&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
@@ -89,7 +89,7 @@
 <div id="hud"></div>
 <div id="modal"><div class="card"></div></div>
 <div id="home">原作：李宜玲老師（Genially）・內新國小改編版</div>
-<script src="data.js?v=20261116b"></script>
+<script src="data.js?v=20261116c"></script>
 <script>
 /* ============================================================
    想再改文字？改這裡就好（左邊是原文、右邊是要換成的字）
@@ -169,25 +169,26 @@ function updHud() { if (!P.started) return; hud.style.display = 'block'; hud.tex
 function penalty() { if (!P.started || P.done) return; P.wrong++; P.score = Math.max(SCORE.MIN, P.score - SCORE.WRONG); updHud(); }
 function closeModal() { modal.style.display = 'none'; card.innerHTML = ''; }
 function fmtTime(s) { s = Math.round(s); return `${Math.floor(s / 60)}分${String(s % 60).padStart(2, '0')}秒`; }
+const CLASSES = ['六年一班', '六年二班', '六年三班', '六年四班', '六年五班', '六年六班', '六年七班'];
 function askPlayer(then) {
   let saved = {}; try { saved = JSON.parse(localStorage.getItem('nx_player') || '{}'); } catch (_) {}
   card.innerHTML = `<h2>🕵️ 調查員登記</h2>
     <p>破案後會把你的分數放上排行榜。起始 ${SCORE.START} 分，每答錯一次扣 ${SCORE.WRONG} 分；同分時，用越少時間破案的人排越前面。</p>
-    <label>班級</label><input id="pCls" maxlength="10" placeholder="例如：503" value="${esc(saved.cls || '')}">
+    <label>班級</label><select id="pCls"><option value="">請選擇班級</option>${CLASSES.map(c => `<option ${c === saved.cls ? 'selected' : ''}>${c}</option>`).join('')}</select>
     <label>暱稱（或座號＋暱稱）</label><input id="pName" maxlength="12" placeholder="例如：12號 小明" value="${esc(saved.name || '')}">
     <div class="err" id="pErr"></div>
     <div class="btns"><button id="pGo">開始調查</button></div>`;
   modal.style.display = 'flex';
   const go2 = () => {
     const n = card.querySelector('#pName').value.trim(), c = card.querySelector('#pCls').value.trim();
-    if (!c || !n) { card.querySelector('#pErr').textContent = '請填好班級和暱稱'; return; }
+    if (!c || !n) { card.querySelector('#pErr').textContent = '請選擇班級，並填好暱稱'; return; }
     Object.assign(P, { name: n, cls: c, score: SCORE.START, wrong: 0, t0: Date.now(), done: false, started: true });
     try { localStorage.setItem('nx_player', JSON.stringify({ name: n, cls: c })); } catch (_) {}
     closeModal(); updHud(); then();
   };
   card.querySelector('#pGo').onclick = go2;
   card.querySelectorAll('input').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') go2(); }));
-  setTimeout(() => card.querySelector(saved.cls ? '#pName' : '#pCls').focus(), 50);
+  setTimeout(() => card.querySelector(CLASSES.includes(saved.cls) ? '#pName' : '#pCls').focus(), 50);
 }
 function localList() { try { return JSON.parse(localStorage.getItem('nx_scores') || '[]'); } catch (_) { return []; } }
 async function submitScore(rec) {
@@ -235,7 +236,7 @@ async function showRank(cls) {
     let list;
     try { list = await fetchScores(); } catch (_) { body.innerHTML = '<p class="err">讀不到排行榜，請檢查網路或 SCORE_URL 設定。</p>'; return; }
     if (!Array.isArray(list)) list = [];
-    const classes = [...new Set(list.map(x => String(x.cls)))].sort();
+    const classes = [...CLASSES, ...[...new Set(list.map(x => String(x.cls)))].filter(c => !CLASSES.includes(c)).sort()];
     const curSel = sel.value || cls || '';
     sel.innerHTML = '<option value="">全部班級</option>' + classes.map(c => `<option ${c === curSel ? 'selected' : ''}>${esc(c)}</option>`).join('');
     const rows = sortScores(list.filter(x => !sel.value || String(x.cls) === sel.value)).slice(0, 50);
