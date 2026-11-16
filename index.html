@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>消失的學生：校園防疫迷蹤（內新國小版）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;700&family=Inter:wght@400;700&family=Lacquer&family=Press+Start+2P&family=Quantico:wght@400;700&family=Schibsted+Grotesk:wght@400;700&family=VT323&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:"Noto Sans TC",sans-serif}
+  #viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  #stage{position:absolute;left:50%;top:50%;width:1200px;height:675px;transform-origin:center center;overflow:hidden;background:#000}
+  .slide{position:absolute;inset:0;overflow:hidden}
+  .bg{position:absolute;background-repeat:no-repeat}
+  .el{position:absolute;box-sizing:border-box}
+  .el.click{cursor:pointer}
+  .el.h-lighten.click:hover{filter:brightness(1.18)}
+  .el.h-float:hover{transform:translateY(-6px)!important;transition:transform .3s}
+  .el.h-blur:hover{filter:blur(2px)}
+  .img{position:absolute;inset:0;overflow:hidden}
+  .img img{position:absolute;display:block;user-select:none;-webkit-user-drag:none}
+  .svg svg{width:100%;height:100%;display:block}
+  .txt{white-space:normal;word-break:break-word;overflow-wrap:anywhere}
+  .txt p{margin:0}
+  .t-left{text-align:left}.t-center{text-align:center}.t-right{text-align:right}.t-justify{text-align:justify}
+  .upper{text-transform:uppercase}
+  /* effects */
+  .anim{animation-fill-mode:both}
+  @keyframes fade-in{from{opacity:0}to{opacity:1}}
+  @keyframes focus-in{from{filter:blur(12px);opacity:0}to{filter:blur(0);opacity:1}}
+  @keyframes scale-in-center{from{transform:scale(0);opacity:1}to{transform:scale(1);opacity:1}}
+  @keyframes slide-in-right{from{transform:translateX(1000px);opacity:0}to{transform:translateX(0);opacity:1}}
+  @keyframes fade-in-top{from{transform:translateY(-50px);opacity:0}to{transform:translateY(0);opacity:1}}
+  @keyframes fade-in-bottom{from{transform:translateY(50px);opacity:0}to{transform:translateY(0);opacity:1}}
+  @keyframes text-flicker-in-glow{0%{opacity:0}10%{opacity:0}10.1%{opacity:1}10.2%{opacity:0}20%{opacity:0}20.1%{opacity:1;text-shadow:0 0 30px rgba(255,255,255,.25)}20.6%{opacity:0}30%{opacity:0}30.1%{opacity:1}30.5%{opacity:1}30.6%{opacity:0}45%{opacity:0}45.1%{opacity:1}50%{opacity:1}55%{opacity:1}55.1%{opacity:0}57%{opacity:0}57.1%{opacity:1}60%{opacity:1}60.1%{opacity:0}65%{opacity:0}65.1%{opacity:1}75%{opacity:1}75.1%{opacity:0}77%{opacity:0}77.1%{opacity:1}85%{opacity:1}85.1%{opacity:0}86%{opacity:0}86.1%{opacity:1}100%{opacity:1}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+  /* activities */
+  .act{display:flex;flex-direction:column;gap:12px;padding:18px 20px;font-family:"VT323","Noto Sans TC",monospace;overflow:auto}
+  .act .q{margin:0}
+  .act .q p{margin:0}
+  .act .answers{display:flex;flex-direction:column;gap:8px}
+  .act .ans{padding:10px 14px;border:2px solid transparent;border-radius:8px;cursor:pointer;text-align:left;font:inherit;line-height:1.25;font-family:"Noto Sans TC",sans-serif}
+  .act .ans.sel{border-style:solid}
+  .act .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .act .btn{border:0;border-radius:8px;padding:9px 22px;cursor:pointer;font-weight:700;font-family:"Schibsted Grotesk","Noto Sans TC",sans-serif}
+  .act .fb{min-height:1.4em;font-family:"Noto Sans TC",sans-serif;font-weight:700}
+  .act input{font:inherit;padding:12px 16px;border-radius:10px;border:2px solid rgba(255,255,255,.55);background:rgba(255,255,255,.1);color:#fff;outline:none;font-family:"Noto Sans TC",sans-serif;width:100%;box-sizing:border-box}
+  .act input:focus{border-color:#ee80ae}
+  .act .timer{font-family:"Noto Sans TC",sans-serif;font-size:15px;opacity:.85}
+  .sort-item{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;cursor:grab;font-family:"Noto Sans TC",sans-serif;line-height:1.3;user-select:none}
+  .sort-item.drag{opacity:.4}
+  .sort-item .mv{display:flex;flex-direction:column;gap:2px;margin-left:auto}
+  .sort-item .mv button{border:0;background:rgba(255,255,255,.18);color:#fff;border-radius:4px;cursor:pointer;width:26px;height:18px;line-height:18px;padding:0;font-size:11px}
+  /* overlays */
+  #popup{position:absolute;inset:0;z-index:9000;display:none;background:rgba(0,0,0,.55)}
+  #popup .slide{position:absolute;inset:0}
+  #zoom{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;cursor:zoom-out}
+  #zoom .box{max-width:92vw;max-height:88vh;background:#fff;color:#111;padding:28px 34px;border-radius:12px;font-size:clamp(18px,3vw,30px);line-height:1.5}
+  #zoom img{max-width:92vw;max-height:88vh;display:block}
+  .tip{position:absolute;z-index:9800;max-width:380px;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.4);font-size:17px;line-height:1.5;font-family:"Noto Sans TC",sans-serif;pointer-events:none}
+  .tip p{margin:0}
+  #home{position:fixed;right:10px;bottom:8px;z-index:9900;color:rgba(255,255,255,.35);font:12px "Noto Sans TC",sans-serif;pointer-events:none}
+  #hud{position:fixed;right:12px;top:10px;z-index:9900;background:rgba(10,10,40,.75);border:2px solid #ee80ae;color:#fff;border-radius:18px;padding:5px 14px;font:700 15px "Noto Sans TC",sans-serif;display:none}
+  #rankBtn{position:fixed;left:118px;bottom:8px;z-index:9900;background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:16px;padding:5px 11px;font:13px "Noto Sans TC",sans-serif;cursor:pointer}
+  #modal{position:fixed;inset:0;z-index:9950;background:rgba(3,4,25,.88);display:none;align-items:center;justify-content:center;font-family:"Noto Sans TC",sans-serif;color:#fff}
+  #modal .card{width:min(92vw,560px);max-height:90vh;overflow:auto;background:#151530;border:2px solid #ee80ae;border-radius:16px;padding:24px 26px;box-shadow:0 0 40px rgba(238,128,174,.35)}
+  #modal h2{margin:0 0 6px;font-size:26px;color:#bae1f7}
+  #modal p{margin:6px 0 14px;line-height:1.6;opacity:.9}
+  #modal label{display:block;margin:12px 0 4px;font-weight:700}
+  #modal input,#modal select{width:100%;box-sizing:border-box;font:18px "Noto Sans TC",sans-serif;padding:10px 12px;border-radius:8px;border:2px solid rgba(255,255,255,.35);background:#0b0b22;color:#fff}
+  #modal .btns{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  #modal button{border:0;border-radius:10px;padding:10px 20px;font:700 17px "Noto Sans TC",sans-serif;cursor:pointer;background:#ee80ae;color:#fff}
+  #modal button.ghost{background:rgba(255,255,255,.14)}
+  #modal .err{color:#ff8a9a;min-height:1.3em;margin-top:8px}
+  #modal table{width:100%;border-collapse:collapse;margin-top:10px;font-size:17px}
+  #modal th,#modal td{padding:7px 6px;border-bottom:1px solid rgba(255,255,255,.12);text-align:left}
+  #modal th{color:#bae1f7;font-size:14px}
+  #modal tr.me td{background:rgba(238,128,174,.22)}
+  #modal .big{font-size:56px;font-weight:900;color:#ee80ae;line-height:1.1}
+  #modal .note{font-size:13px;opacity:.65;margin-top:10px}
+  #sound{position:fixed;left:10px;bottom:8px;z-index:9900;background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:16px;padding:5px 11px;font:13px "Noto Sans TC",sans-serif;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage"><div id="popup"></div></div></div>
+<div id="zoom"></div>
+<button id="sound" title="音效開關">🔊 音效：開</button>
+<button id="rankBtn" title="查看排行榜">🏆 排行榜</button>
+<div id="hud"></div>
+<div id="modal"><div class="card"></div></div>
+<div id="home">原作：李宜玲老師（Genially）・內新國小改編版</div>
+<script src="data.js"></script>
+<script>
+/* ============================================================
+   想再改文字？改這裡就好（左邊是原文、右邊是要換成的字）
+   ============================================================ */
+const EXTRA_TEXT = {
+  coverBadge: '臺中市大里區 內新國小版'
+};
+/* ============================================================
+   排行榜設定
+   SCORE_URL：貼上 Google Apps Script「網頁應用程式」網址（https://script.google.com/macros/s/…/exec）
+   留空 = 排行榜只存在這台電腦（本機模式）
+   ============================================================ */
+const SCORE = {
+  SCORE_URL: '',
+  START: 100,        // 起始分數
+  WRONG: 5,          // 每答錯一次扣幾分
+  MIN: 0             // 最低分
+};
+
+const D = window.GDATA;
+const SVG = D.svgRefs || {};
+const IA = D.interactivityActions || {};
+const stage = document.getElementById('stage');
+const popupEl = document.getElementById('popup');
+const zoomEl = document.getElementById('zoom');
+let soundOn = true;
+document.getElementById('sound').onclick = e => {
+  soundOn = !soundOn; e.target.textContent = soundOn ? '🔊 音效：開' : '🔇 音效：關';
+  if (!soundOn) stopAudios();
+};
+
+const slides = D.Slides.slice().sort((a, b) => a.Order - b.Order);
+const mainSlides = slides.filter(s => !s.Popup && !s.Hidden);
+const byId = {}; slides.forEach(s => byId[s.Id] = s);
+const KINDS = ['Images', 'Texts', 'Svgs', 'Groups', 'Activities', 'Audios'];
+const bySlide = {};
+KINDS.forEach(k => (D[k] || []).forEach(e => { e._k = k; (bySlide[e.IdSlide] = bySlide[e.IdSlide] || []).push(e); }));
+const elById = {};
+KINDS.forEach(k => (D[k] || []).forEach(e => elById[e.Id] = e));
+
+function px(v) { return parseFloat(v) || 0; }
+function fit() {
+  const s = Math.min(innerWidth / 1200, innerHeight / 675);
+  stage.style.transform = `translate(-50%,-50%) scale(${s})`;
+}
+addEventListener('resize', fit); fit();
+
+const DUR = { vel1: .45, vel2: .8, vel3: 1.2, vel4: 1.8 };
+function applyEffect(node, e) {
+  const fx = e.EffectIn;
+  if (!fx || fx === 'none') return;
+  node.classList.add('anim');
+  node.style.animationName = fx;
+  node.style.animationDuration = (DUR[e.DurationIn] || .8) + 's';
+  node.style.animationDelay = (parseFloat(e.DelayIn) || 0) + 's';
+  if (fx === 'text-flicker-in-glow') node.style.animationDuration = '2s';
+}
+
+/* ---------- audio ---------- */
+let playing = [];
+function playSound(src, vol) {
+  if (!soundOn || !src) return null;
+  const a = new Audio(src); a.volume = Math.min(1, (vol ?? 100) / 100);
+  a.play().catch(() => {}); playing.push(a); return a;
+}
+function stopAudios() { playing.forEach(a => { try { a.pause(); } catch (_) {} }); playing = []; }
+
+/* ---------- navigation ---------- */
+let cur = 0; let timers = [];
+function clearTimers() { timers.forEach(t => clearTimeout(t) || clearInterval(t)); timers = []; }
+/* ---------- 計分與排行榜 ---------- */
+const P = { name: '', cls: '', score: SCORE.START, wrong: 0, t0: 0, done: false, started: false };
+const hud = document.getElementById('hud');
+const modal = document.getElementById('modal'), card = modal.querySelector('.card');
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function updHud() { if (!P.started) return; hud.style.display = 'block'; hud.textContent = `${P.name}｜分數 ${P.score}`; }
+function penalty() { if (!P.started || P.done) return; P.wrong++; P.score = Math.max(SCORE.MIN, P.score - SCORE.WRONG); updHud(); }
+function closeModal() { modal.style.display = 'none'; card.innerHTML = ''; }
+function fmtTime(s) { s = Math.round(s); return `${Math.floor(s / 60)}分${String(s % 60).padStart(2, '0')}秒`; }
+function askPlayer(then) {
+  let saved = {}; try { saved = JSON.parse(localStorage.getItem('nx_player') || '{}'); } catch (_) {}
+  card.innerHTML = `<h2>🕵️ 調查員登記</h2>
+    <p>破案後會把你的分數放上排行榜。起始 ${SCORE.START} 分，每答錯一次扣 ${SCORE.WRONG} 分；同分時，用越少時間破案的人排越前面。</p>
+    <label>班級</label><input id="pCls" maxlength="10" placeholder="例如：503" value="${esc(saved.cls || '')}">
+    <label>暱稱（或座號＋暱稱）</label><input id="pName" maxlength="12" placeholder="例如：12號 小明" value="${esc(saved.name || '')}">
+    <div class="err" id="pErr"></div>
+    <div class="btns"><button id="pGo">開始調查</button></div>`;
+  modal.style.display = 'flex';
+  const go2 = () => {
+    const n = card.querySelector('#pName').value.trim(), c = card.querySelector('#pCls').value.trim();
+    if (!c || !n) { card.querySelector('#pErr').textContent = '請填好班級和暱稱'; return; }
+    Object.assign(P, { name: n, cls: c, score: SCORE.START, wrong: 0, t0: Date.now(), done: false, started: true });
+    try { localStorage.setItem('nx_player', JSON.stringify({ name: n, cls: c })); } catch (_) {}
+    closeModal(); updHud(); then();
+  };
+  card.querySelector('#pGo').onclick = go2;
+  card.querySelectorAll('input').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') go2(); }));
+  setTimeout(() => card.querySelector(saved.cls ? '#pName' : '#pCls').focus(), 50);
+}
+function localList() { try { return JSON.parse(localStorage.getItem('nx_scores') || '[]'); } catch (_) { return []; } }
+async function submitScore(rec) {
+  if (SCORE.SCORE_URL) {
+    try { await fetch(SCORE.SCORE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(rec) }); return true; }
+    catch (_) { return false; }
+  }
+  try { const l = localList(); l.push(rec); localStorage.setItem('nx_scores', JSON.stringify(l)); return true; } catch (_) { return false; }
+}
+async function fetchScores() {
+  if (SCORE.SCORE_URL) {
+    const r = await fetch(SCORE.SCORE_URL + (SCORE.SCORE_URL.includes('?') ? '&' : '?') + 't=' + Date.now());
+    return await r.json();
+  }
+  return localList();
+}
+function sortScores(l) { return l.slice().sort((a, b) => (b.score - a.score) || (a.sec - b.sec)); }
+function finishGame() {
+  if (!P.started || P.done) return;
+  P.done = true;
+  const rec = { name: P.name, cls: P.cls, score: P.score, sec: Math.round((Date.now() - P.t0) / 1000), wrong: P.wrong, at: new Date().toISOString() };
+  P.last = rec;
+  timers.push(setTimeout(() => {
+    card.innerHTML = `<h2>🎉 破案成功！</h2><p>${esc(P.cls)} ${esc(P.name)}，你的成績：</p>
+      <div class="big">${rec.score} 分</div><p>答錯 ${rec.wrong} 次・用時 ${fmtTime(rec.sec)}</p>
+      <div class="err" id="sMsg">成績上傳中…</div>
+      <div class="btns"><button id="sRank">看排行榜</button><button class="ghost" id="sClose">繼續看結局</button></div>`;
+    modal.style.display = 'flex';
+    card.querySelector('#sRank').onclick = () => showRank(P.cls);
+    card.querySelector('#sClose').onclick = closeModal;
+    submitScore(rec).then(ok => { const m = card.querySelector('#sMsg'); if (m) { m.style.color = ok ? '#7fe0b4' : '#ff8a9a'; m.textContent = ok ? '✔ 成績已登錄' : '成績上傳失敗，請告訴老師'; } });
+  }, 2500));
+}
+let rankTimer = null;
+async function showRank(cls) {
+  clearInterval(rankTimer);
+  card.innerHTML = `<h2>🏆 破案排行榜</h2>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:8px"><select id="rCls"><option value="">全部班級</option></select></div>
+    <div id="rBody"><p>讀取中…</p></div>
+    <div class="btns"><button class="ghost" id="rRef">重新整理</button><button class="ghost" id="rClose">關閉</button>${SCORE.SCORE_URL ? '' : '<button class="ghost" id="rClear">清除本機紀錄</button>'}</div>
+    <div class="note">${SCORE.SCORE_URL ? '成績儲存在老師的 Google 試算表。' : '本機模式：排行榜只記錄在這台電腦／這個瀏覽器。'}排名規則：分數高者在前，同分比用時。</div>`;
+  modal.style.display = 'flex';
+  const sel = card.querySelector('#rCls'), body = card.querySelector('#rBody');
+  const load = async () => {
+    let list;
+    try { list = await fetchScores(); } catch (_) { body.innerHTML = '<p class="err">讀不到排行榜，請檢查網路或 SCORE_URL 設定。</p>'; return; }
+    if (!Array.isArray(list)) list = [];
+    const classes = [...new Set(list.map(x => String(x.cls)))].sort();
+    const curSel = sel.value || cls || '';
+    sel.innerHTML = '<option value="">全部班級</option>' + classes.map(c => `<option ${c === curSel ? 'selected' : ''}>${esc(c)}</option>`).join('');
+    const rows = sortScores(list.filter(x => !sel.value || String(x.cls) === sel.value)).slice(0, 50);
+    if (!rows.length) { body.innerHTML = '<p>還沒有人破案，快來搶第一名！</p>'; return; }
+    body.innerHTML = `<table><tr><th>名次</th><th>班級</th><th>暱稱</th><th>分數</th><th>用時</th></tr>${rows.map((r, i) => {
+      const me = P.last && r.name === P.last.name && String(r.cls) === String(P.last.cls) && r.sec === P.last.sec && r.score === P.last.score;
+      return `<tr class="${me ? 'me' : ''}"><td>${['🥇', '🥈', '🥉'][i] || i + 1}</td><td>${esc(r.cls)}</td><td>${esc(r.name)}</td><td>${esc(r.score)}</td><td>${fmtTime(+r.sec || 0)}</td></tr>`;
+    }).join('')}</table>`;
+  };
+  sel.onchange = load;
+  card.querySelector('#rRef').onclick = load;
+  card.querySelector('#rClose').onclick = () => { clearInterval(rankTimer); closeModal(); };
+  const clr = card.querySelector('#rClear');
+  if (clr) clr.onclick = () => { if (clr.dataset.sure) { try { localStorage.removeItem('nx_scores'); } catch (_) {} load(); clr.textContent = '已清除'; } else { clr.dataset.sure = 1; clr.textContent = '再按一次確認清除'; } };
+  if (cls) sel.innerHTML = `<option value="${esc(cls)}" selected>${esc(cls)}</option>`;
+  await load();
+  rankTimer = setInterval(() => { if (modal.style.display === 'flex' && card.querySelector('#rBody')) load(); else clearInterval(rankTimer); }, 15000);
+}
+document.getElementById('rankBtn').onclick = () => showRank('');
+
+function go(target) {
+  if (cur === 0 && !P.started && target === 'nextPage') { askPlayer(() => show(1)); return; }
+  if (target === 'firstPage' && P.started && !P.done) { /* 回首頁不重設分數 */ }
+  if (target === 'nextPage') show(Math.min(cur + 1, mainSlides.length - 1));
+  else if (target === 'previousPage') show(Math.max(cur - 1, 0));
+  else if (target === 'firstPage') show(0);
+  else if (typeof target === 'number') show(target);
+  else { const i = mainSlides.findIndex(s => s.Id === target); if (i >= 0) show(i); }
+}
+function runAction(id, node, e) {
+  const a = IA[id]; if (!a) return;
+  switch (a.type) {
+    case 'goToSlide': {
+      const t = a.target || {};
+      go(t.smartLink || t.slideId || t.targetSlideId || a.targetSlideId);
+      break;
+    }
+    case 'slidePopup': openPopup(a.targetSlideId); break;
+    case 'closeSlidePopup': closePopup(); break;
+    case 'zoom': openZoom(node, e); break;
+    case 'showElements': {
+      const anims = (a.stagedAnimations && a.stagedAnimations.animations) || [];
+      anims.forEach(an => {
+        const n = document.querySelector(`[data-id="${an.targetItemId}"]`); const el = elById[an.targetItemId];
+        if (n && el) { n.style.display = ''; n.style.animation = 'none'; void n.offsetWidth; n.style.animation = ''; applyEffect(n, Object.assign({}, el, { DelayIn: 0 })); }
+      });
+      break;
+    }
+  }
+}
+function show(i) {
+  closePopup(); clearTimers(); stopAudios(); hideTip();
+  cur = i;
+  stage.querySelectorAll(':scope > .slide').forEach(n => n.remove());
+  const node = renderSlide(mainSlides[i]);
+  stage.insertBefore(node, popupEl);
+  if (i === mainSlides.length - 1) finishGame();
+}
+function openPopup(id) {
+  const s = byId[id]; if (!s) return;
+  popupEl.innerHTML = ''; popupEl.appendChild(renderSlide(s, true)); popupEl.style.display = 'block';
+}
+function closePopup() { popupEl.style.display = 'none'; popupEl.innerHTML = ''; }
+function openZoom(node, e) {
+  zoomEl.innerHTML = '';
+  if (e && e._k === 'Images') { const im = document.createElement('img'); im.src = e.Source; zoomEl.appendChild(im); }
+  else { const b = document.createElement('div'); b.className = 'box'; b.innerHTML = e.TextMessage || node.innerHTML; zoomEl.appendChild(b); }
+  zoomEl.style.display = 'flex';
+}
+zoomEl.onclick = () => { zoomEl.style.display = 'none'; };
+
+/* ---------- tooltip ---------- */
+let tipNode = null;
+function showTip(a, node) {
+  hideTip();
+  tipNode = document.createElement('div'); tipNode.className = 'tip';
+  tipNode.style.background = a.backgroundColor || '#ddd';
+  tipNode.style.color = a.defaultTextColor || '#000';
+  tipNode.style.padding = a.padding || '16px';
+  tipNode.innerHTML = (a.html || '').replace(/<\/?(head|body)[^>]*>/g, '');
+  stage.appendChild(tipNode);
+  const r = { x: px(node.dataset.ax), y: px(node.dataset.ay), w: node.offsetWidth, h: node.offsetHeight };
+  let x = r.x + r.w + 12, y = r.y;
+  if (x + 380 > 1200) x = Math.max(10, r.x - 392);
+  tipNode.style.left = x + 'px'; tipNode.style.top = Math.min(y, 675 - tipNode.offsetHeight - 10) + 'px';
+}
+function hideTip() { if (tipNode) { tipNode.remove(); tipNode = null; } }
+
+/* ---------- rendering ---------- */
+function base(e, parentPos) {
+  const n = document.createElement('div'); n.className = 'el'; n.dataset.id = e.Id;
+  const x = px(e.Position.PositionLeft), y = px(e.Position.PositionTop);
+  n.style.left = x + 'px'; n.style.top = y + 'px';
+  n.dataset.ax = x + (parentPos ? parentPos.x : 0); n.dataset.ay = y + (parentPos ? parentPos.y : 0);
+  if (e.Size) { n.style.width = px(e.Size.Width) + 'px'; n.style.height = px(e.Size.Height) + 'px'; }
+  n.style.zIndex = e.ZIndex || 1;
+  const rot = e.Rotation && e.Rotation.Rotatione; if (rot && rot !== 'rotate(0deg)') n.style.rotate = rot.replace(/rotate\(|\)/g, '');
+  if (e.Opacity && e.Opacity !== '1') n.style.opacity = e.Opacity;
+  if (e.BlendMode && e.BlendMode !== 'normal') n.style.mixBlendMode = e.BlendMode;
+  if (e.IsHidden) n.style.display = 'none';
+  if (e.EffectHover === 'lighten') n.classList.add('h-lighten');
+  if (e.EffectHover === 'hvr-float') n.classList.add('h-float');
+  if (e.EffectHover === 'blur') n.classList.add('h-blur');
+  applyEffect(n, e);
+  const it = e.interactivities || {};
+  if (it.click) { n.classList.add('click'); n.addEventListener('click', ev => { ev.stopPropagation(); runAction(it.click, n, e); }); }
+  if (it.hover) {
+    const a = IA[it.hover];
+    if (a && a.type === 'htmlTooltip') {
+      n.classList.add('click');
+      n.addEventListener('mouseenter', () => showTip(a, n));
+      n.addEventListener('mouseleave', hideTip);
+      n.addEventListener('click', ev => { ev.stopPropagation(); tipNode ? hideTip() : showTip(a, n); });
+    } else if (a) n.addEventListener('mouseenter', () => runAction(it.hover, n, e));
+  }
+  return n;
+}
+function renderImage(e, pp) {
+  const n = base(e, pp);
+  const w = document.createElement('div'); w.className = 'img';
+  if (e.Frame === 'img-rounded-square') w.style.borderRadius = '12%';
+  const im = document.createElement('img'); im.src = e.Source; im.alt = ''; im.draggable = false;
+  const o = e.Offset || {}; const l = o.left || 0, r = o.right || 0, t = o.top || 0, b = o.bottom || 0;
+  im.style.left = l + '%'; im.style.top = t + '%';
+  im.style.width = (100 - l - r) + '%'; im.style.height = (100 - t - b) + '%';
+  const tf = e.Transformations && e.Transformations.flip;
+  if (tf && (tf.x || tf.y)) im.style.transform = `scale(${tf.x ? -1 : 1},${tf.y ? -1 : 1})`;
+  const adj = e.Adjustments || {};
+  if (adj.brightness || adj.contrast || adj.saturation) im.style.filter = `brightness(${1 + (adj.brightness || 0) / 100}) contrast(${1 + (adj.contrast || 0) / 100}) saturate(${1 + (adj.saturation || 0) / 100})`;
+  w.appendChild(im); n.appendChild(w);
+  return n;
+}
+let svgUid = 0;
+function renderSvg(e, pp) {
+  const n = base(e, pp); n.classList.add('svg');
+  let src = SVG[e.SourceSvg] || '';
+  const uid = 'sv' + (svgUid++);
+  let css = '';
+  (e.Colors || []).forEach((c, i) => { css += `#${uid} .color${i + 1}{fill:${c}!important}`; });
+  src = src.replace(/<svg/, `<svg id="${uid}" preserveAspectRatio="${e.AspectRatio === false ? 'none' : 'xMidYMid meet'}"`);
+  n.innerHTML = (css ? `<style>${css}</style>` : '') + src;
+  return n;
+}
+function renderText(e, pp) {
+  const n = base(e, pp); n.classList.add('txt');
+  const fam = (e.FontFamily || 'Inter');
+  n.style.fontFamily = `"${fam}","Noto Sans TC",sans-serif`;
+  n.style.fontSize = e.FontSize || '20px';
+  n.style.color = e.Color || '#000';
+  n.style.lineHeight = e.LineHeight || '1.2';
+  if (e.LetterSpacing && e.LetterSpacing !== '0') n.style.letterSpacing = e.LetterSpacing + 'px';
+  if (e.Padding) n.style.padding = e.Padding;
+  if (e.Background) n.style.background = e.Background;
+  if (e.Shadow) n.style.textShadow = e.Shadow;
+  if (e._pill) { n.style.width = 'auto'; n.style.height = 'auto'; n.style.padding = '8px 18px'; n.style.borderRadius = '999px'; n.style.background = 'rgba(10,6,30,.82)'; n.style.border = '2px solid #ff5fa8'; n.style.whiteSpace = 'nowrap'; }
+  (e.Classes || []).forEach(c => {
+    if (c.startsWith('text-align-')) n.classList.add('t-' + c.slice(11));
+    if (c === 'uppercase') n.classList.add('upper');
+  });
+  if (e.Size) { n.style.height = 'auto'; n.style.minHeight = px(e.Size.Height) + 'px'; }
+  if (e.VerticalAlign === 'middle' || e.VerticalAlign === 'bottom') { n.style.display = n.style.display || 'flex'; n.style.flexDirection = 'column'; n.style.justifyContent = e.VerticalAlign === 'middle' ? 'center' : 'flex-end'; n.style.height = px(e.Size.Height) + 'px'; }
+  if (e.DisplayHtmlAs && e.DisplayHtmlAs.startsWith('title')) n.style.fontWeight = '700';
+  n.innerHTML = e.TextMessage || '';
+  n.querySelectorAll('a').forEach(a => { a.target = '_blank'; a.rel = 'noopener'; });
+  return n;
+}
+function renderGroup(e, children) {
+  const n = base(e);
+  const pos = { x: px(e.Position.PositionLeft), y: px(e.Position.PositionTop) };
+  children.sort((a, b) => (a.ZIndex || 0) - (b.ZIndex || 0)).forEach(c => { const cn = renderEl(c, pos); if (cn) n.appendChild(cn); });
+  return n;
+}
+function renderAudio(e) {
+  if (e.AutoPlay) {
+    timers.push(setTimeout(() => {
+      const a = playSound(e.Source, e.Volume);
+      if (a && e.EndTime) timers.push(setTimeout(() => a.pause(), (e.EndTime - (e.InitialTime || 0)) * 1000));
+      if (a && e.Loop) a.loop = true;
+    }, (parseFloat(e.DelayIn) || 0) * 1000));
+  }
+  return null;
+}
+function renderEl(e, pp) {
+  switch (e._k) {
+    case 'Images': return renderImage(e, pp);
+    case 'Texts': return renderText(e, pp);
+    case 'Svgs': return renderSvg(e, pp);
+    case 'Activities': return renderActivity(e, pp);
+    case 'Audios': return renderAudio(e);
+  }
+  return null;
+}
+function renderSlide(s, isPopup) {
+  const node = document.createElement('div'); node.className = 'slide';
+  node.style.background = s.BackgroundColor && s.BackgroundColor !== 'transparent' ? s.BackgroundColor : (isPopup ? 'transparent' : '#000');
+  if (s.Background && !/backgroundStandard/.test(s.Background)) {
+    const bg = document.createElement('div'); bg.className = 'bg';
+    bg.style.backgroundImage = `url("${s.Background}")`;
+    const sz = s.SizeBackground || {}; const ps = s.PositionBackground || {};
+    bg.style.width = (px(sz.Width) || 1200) + 'px'; bg.style.height = (px(sz.Height) || 675) + 'px';
+    bg.style.left = px(ps.PositionLeft) + 'px'; bg.style.top = px(ps.PositionTop) + 'px';
+    bg.style.backgroundSize = '100% 100%';
+    if (s.OpacityBackground && s.OpacityBackground !== '1') bg.style.opacity = s.OpacityBackground;
+    node.appendChild(bg);
+  }
+  const els = bySlide[s.Id] || [];
+  const groups = {}; const top = [];
+  els.forEach(e => { if (e._k === 'Groups') groups[e.Id] = { g: e, kids: [] }; });
+  els.forEach(e => { if (e._k !== 'Groups') { if (e.IdGroup && groups[e.IdGroup]) groups[e.IdGroup].kids.push(e); else top.push(e); } });
+  const items = top.concat(Object.values(groups).map(x => Object.assign(x.g, { _kids: x.kids })));
+  items.sort((a, b) => (a.ZIndex || 0) - (b.ZIndex || 0)).forEach(e => {
+    const n = e._k === 'Groups' ? renderGroup(e, e._kids) : renderEl(e);
+    if (n) node.appendChild(n);
+  });
+  if (!isPopup && s.Order === 1) {
+    const b = document.createElement('div');
+    b.textContent = EXTRA_TEXT.coverBadge;
+    Object.assign(b.style, { position: 'absolute', left: '0', right: '0', top: '458px', textAlign: 'center', color: '#bae1f7', font: '700 26px "Noto Sans TC",sans-serif', letterSpacing: '6px', textShadow: '0 0 12px rgba(0,0,0,.9)', zIndex: 50, animation: 'fade-in 1.2s 1s both' });
+    node.appendChild(b);
+  }
+  if (isPopup) node.addEventListener('click', ev => { if (ev.target === node) closePopup(); });
+  return node;
+}
+
+/* ---------- activities ---------- */
+function rgba(c, f) { return c || f; }
+function norm(s) {
+  return (s || '').normalize('NFKC').toLowerCase().replace(/[\s「」『』"'。，,.!！?？]/g, '');
+}
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function sfx(e, trig) {
+  const sa = ((e.Options || {}).SoundActions || []).find(s => s.trigger === trig);
+  if (sa) playSound(sa.source, sa.volume);
+}
+function renderActivity(e, pp) {
+  const n = base(e, pp);
+  const A = e.Appearance || {}; const G = A.General || {}; const Q = A.Question || {}; const AN = A.Answer || {}; const B = A.Button || {}; const F = A.Feedback || {};
+  const O = e.Options || {};
+  n.classList.add('act');
+  // 統一的國小版題目樣式：深紫霓虹卡片 + 粉紅框
+  n.style.background = 'rgba(24,14,52,.94)';
+  n.style.border = '3px solid #ff5fa8';
+  n.style.borderRadius = '16px';
+  n.style.boxShadow = '0 0 18px rgba(255,95,168,.55), inset 0 0 12px rgba(255,95,168,.15)';
+  n.style.padding = '22px 24px';
+  const q = document.createElement('div'); q.className = 'q';
+  q.style.fontSize = '25px'; q.style.color = '#fff'; q.style.lineHeight = 1.4; q.style.fontWeight = '700';
+  q.style.fontFamily = '"Noto Sans TC",sans-serif';
+  q.innerHTML = e.Question || '';
+  q.querySelectorAll('[style]').forEach(x => { x.style.fontSize = ''; x.style.fontFamily = ''; });
+  q.querySelectorAll('[data-font-family]').forEach(x => x.removeAttribute('data-font-family'));
+  n.appendChild(q);
+  const fb = document.createElement('div'); fb.className = 'fb'; fb.style.fontSize = '20px';
+  const okColor = '#5ff2b0', badColor = '#ff8fa3';
+  const btn = document.createElement('button'); btn.className = 'btn';
+  btn.textContent = '送出答案 →';
+  btn.style.background = '#ff5fa8'; btn.style.color = '#fff'; btn.style.fontSize = '20px'; btn.style.boxShadow = '0 3px 0 #b8306f';
+  const ansStyle = el => {
+    el.style.fontSize = '20px'; el.style.color = '#fff';
+    el.style.background = 'rgba(255,255,255,.08)';
+    el.style.borderColor = 'rgba(255,255,255,.28)';
+  };
+  AN.SelectedBorderColor = '#ff5fa8';
+  let done = false;
+  const success = () => {
+    done = true; fb.style.color = okColor; fb.textContent = '✔ 答對了！';
+    sfx(e, 'onSuccess');
+    const act = O.CorrectAction || O.SendAction;
+    if (act) timers.push(setTimeout(() => runActionObj(act), 1300));
+  };
+  const fail = (msg) => {
+    const real = !(msg && (msg.startsWith('請先') || msg.startsWith('⏰')));
+    if (real) penalty();
+    fb.style.color = badColor; fb.textContent = (msg || '✘ 再想想看，再試一次！') + (real && P.started ? `（-${SCORE.WRONG} 分）` : '');
+    sfx(e, 'onFail');
+    n.style.animation = 'shake .45s'; setTimeout(() => n.style.animation = '', 500);
+  };
+  // timer
+  const T = (O.Timer || {}).TimerDuration;
+  let timerEl = null, left = 0, tInt = null;
+  const startTimer = () => {
+    if (!T) return; left = Math.round(T / 1000);
+    timerEl.textContent = `⏱ 剩下 ${left} 秒`;
+    tInt = setInterval(() => {
+      if (done) { clearInterval(tInt); return; }
+      left--; timerEl.textContent = `⏱ 剩下 ${left} 秒`;
+      if (left <= 0) { clearInterval(tInt); fail('⏰ 時間到！再挑戰一次吧'); timers.push(setTimeout(startTimer, 1500)); }
+    }, 1000);
+    timers.push(tInt);
+  };
+  if (T) { timerEl = document.createElement('div'); timerEl.className = 'timer'; timerEl.style.color = Q.FontColor || '#fff'; }
+
+  if (e.Type === 'QUIZ_ACTIVITY') {
+    const wrap = document.createElement('div'); wrap.className = 'answers';
+    const multi = (e.Answers || []).filter(a => a.IsCorrect).length > 1;
+    if (multi) { const h = document.createElement('div'); h.textContent = '（可複選，選完按「送出」）'; h.style.cssText = 'font:15px "Noto Sans TC",sans-serif;opacity:.8;color:' + (Q.FontColor || '#fff'); n.appendChild(h); }
+    const answers = O.RandomAnswersOrder ? shuffle(e.Answers) : e.Answers;
+    const sel = new Set();
+    answers.forEach(a => {
+      const b = document.createElement('button'); b.className = 'ans'; b.textContent = a.Text; ansStyle(b);
+      b.onclick = () => {
+        if (done) return;
+        if (!multi) { sel.clear(); wrap.querySelectorAll('.ans').forEach(x => { x.classList.remove('sel'); x.style.borderColor = 'rgba(255,255,255,.25)'; }); }
+        if (sel.has(a.Id)) { sel.delete(a.Id); b.classList.remove('sel'); b.style.borderColor = 'rgba(255,255,255,.25)'; }
+        else { sel.add(a.Id); b.classList.add('sel'); b.style.borderColor = AN.SelectedBorderColor || '#5ab6e8'; }
+        fb.textContent = '';
+      };
+      wrap.appendChild(b);
+    });
+    if (answers.length > 4) { wrap.style.display = 'grid'; wrap.style.gridTemplateColumns = '1fr 1fr'; }
+    n.appendChild(wrap);
+    btn.onclick = () => {
+      if (done) return;
+      if (!sel.size) { fail('請先選擇答案'); return; }
+      const correct = new Set(e.Answers.filter(a => a.IsCorrect).map(a => a.Id));
+      const ok = sel.size === correct.size && [...sel].every(x => correct.has(x));
+      ok ? success() : fail(multi ? '✘ 還不完全對喔！可能少選或多選了，再檢查一次。' : undefined);
+    };
+  } else if (e.Type === 'SHORT_ANSWER_ACTIVITY') {
+    const inp = document.createElement('input'); inp.placeholder = e._placeholder || '在這裡輸入答案…';
+    inp.style.fontSize = '20px';
+    n.appendChild(inp);
+    const check = () => {
+      if (done) return;
+      const v = norm(inp.value); if (!v) { fail('請先輸入答案'); return; }
+      const ok = (e.Answers || []).some(a => { const t = norm(a.Text); return v === t || (t.length >= 6 && (v.includes(t) || t.includes(v) && v.length >= 6)); });
+      ok ? success() : fail();
+    };
+    btn.onclick = check; inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') check(); });
+  } else if (e.Type === 'SORT_ACTIVITY') {
+    const list = document.createElement('div'); list.className = 'answers';
+    let order = shuffle(e.Answers);
+    if (order.every((a, i) => a.CorrectOrder === i)) order = order.reverse();
+    const draw = () => {
+      list.innerHTML = '';
+      order.forEach((a, i) => {
+        const it = document.createElement('div'); it.className = 'sort-item'; it.draggable = true; ansStyle(it);
+        it.style.fontSize = '19px'; it.style.border = '2px solid rgba(255,255,255,.25)';
+        it.innerHTML = `<b style="opacity:.6">${i + 1}.</b><span></span><span class="mv"><button title="上移">▲</button><button title="下移">▼</button></span>`;
+        it.children[1].textContent = a.Text;
+        const [up, dn] = it.querySelectorAll('button');
+        up.onclick = () => { if (i > 0) { [order[i - 1], order[i]] = [order[i], order[i - 1]]; draw(); fb.textContent = ''; } };
+        dn.onclick = () => { if (i < order.length - 1) { [order[i + 1], order[i]] = [order[i], order[i + 1]]; draw(); fb.textContent = ''; } };
+        it.ondragstart = ev => { it.classList.add('drag'); ev.dataTransfer.setData('text/plain', i); };
+        it.ondragend = () => it.classList.remove('drag');
+        it.ondragover = ev => ev.preventDefault();
+        it.ondrop = ev => { ev.preventDefault(); const from = +ev.dataTransfer.getData('text/plain'); const m = order.splice(from, 1)[0]; order.splice(i, 0, m); draw(); fb.textContent = ''; };
+        list.appendChild(it);
+      });
+    };
+    draw(); n.appendChild(list);
+    const hint = document.createElement('div'); hint.textContent = '（拖曳或按 ▲▼ 調整順序）'; hint.style.cssText = 'font:15px "Noto Sans TC",sans-serif;opacity:.8;color:' + (Q.FontColor || '#fff');
+    n.insertBefore(hint, list);
+    btn.onclick = () => { if (done) return; order.every((a, i) => a.CorrectOrder === i) ? success() : fail('✘ 順序還不對，再調整看看！'); };
+  }
+  const row = document.createElement('div'); row.className = 'row';
+  row.appendChild(btn); if (timerEl) row.appendChild(timerEl);
+  n.appendChild(row); n.appendChild(fb);
+  // keep clicks inside activity from bubbling
+  n.addEventListener('click', ev => ev.stopPropagation());
+  if (e.Type === 'SHORT_ANSWER_ACTIVITY') { n.style.width = Math.max(px(e.Size.Width), 470) + 'px'; n.style.top = Math.max(px(e.Position.PositionTop), 250) + 'px'; }
+  n.style.height = 'auto'; n.style.minHeight = (e.Type === 'SHORT_ANSWER_ACTIVITY' ? 0 : px(e.Size.Height)) + 'px'; n.style.maxHeight = (675 - px(e.Position.PositionTop) - 6) + 'px';
+  startTimerLater(startTimer);
+  return n;
+}
+function startTimerLater(f) { timers.push(setTimeout(f, 50)); }
+function runActionObj(a) {
+  if (!a) return;
+  if (a.type === 'goToSlide') { const t = a.target || {}; go(t.smartLink || a.targetSlideId); }
+  else if (a.type === 'slidePopup') openPopup(a.targetSlideId);
+}
+
+show(0);
+if (location.hash === '#rank') showRank('');
+addEventListener('hashchange', () => { if (location.hash === '#rank') showRank(''); });
+</script>
+</body>
+</html>
