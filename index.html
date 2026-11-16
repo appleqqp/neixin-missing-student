@@ -14,6 +14,8 @@
   .bg{position:absolute;background-repeat:no-repeat}
   .el{position:absolute;box-sizing:border-box}
   .el.click{cursor:pointer}
+  .el.pulse{animation:pulse 1.4s ease-in-out infinite!important;border-radius:50%}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,95,168,.9)}60%{box-shadow:0 0 0 16px rgba(255,95,168,0)}}
   .el.h-lighten.click:hover{filter:brightness(1.18)}
   .el.h-float:hover{transform:translateY(-6px)!important;transition:transform .3s}
   .el.h-blur:hover{filter:blur(2px)}
@@ -89,7 +91,7 @@
 <div id="hud"></div>
 <div id="modal"><div class="card"></div></div>
 <div id="home">原作：李宜玲老師（Genially）・內新國小改編版</div>
-<script src="data.js?v=20261116c"></script>
+<script src="data.js?v=20261116d"></script>
 <script>
 /* ============================================================
    想再改文字？改這裡就好（左邊是原文、右邊是要換成的字）
@@ -342,6 +344,7 @@ function base(e, parentPos) {
   if (e.EffectHover === 'blur') n.classList.add('h-blur');
   applyEffect(n, e);
   const it = e.interactivities || {};
+  if (e._pulse) n.classList.add('pulse');
   if (it.click) { n.classList.add('click'); n.addEventListener('click', ev => { ev.stopPropagation(); runAction(it.click, n, e); }); }
   if (it.hover) {
     const a = IA[it.hover];
