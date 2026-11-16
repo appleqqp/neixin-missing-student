@@ -58,6 +58,11 @@
   #popup .slide{position:absolute;inset:0}
   #zoom{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;cursor:zoom-out}
   #zoom .box{max-width:92vw;max-height:88vh;background:#fff;color:#111;padding:28px 34px;border-radius:12px;font-size:clamp(18px,3vw,30px);line-height:1.5}
+  #news{position:fixed;inset:0;z-index:9500;background:rgba(10,4,24,.9);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+  #news .sc{max-width:94vw;max-height:80vh;overflow:auto;border-radius:12px;border:3px solid #ff5fa8;box-shadow:0 0 24px rgba(255,95,168,.6);background:#fff}
+  #news img{display:block;width:min(94vw,calc(80vh * 1.33));height:auto}
+  #news .hint{color:#fff;font:600 clamp(14px,2vw,20px) 'Noto Sans TC',sans-serif}
+  #news button{background:#ff5fa8;color:#fff;border:0;border-radius:999px;padding:12px 30px;font:700 clamp(16px,2.2vw,22px) 'Noto Sans TC',sans-serif;cursor:pointer;box-shadow:0 0 16px rgba(255,95,168,.7)}
   #zoom img{max-width:92vw;max-height:88vh;display:block}
   .tip{position:absolute;z-index:9800;max-width:380px;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.4);font-size:17px;line-height:1.5;font-family:"Noto Sans TC",sans-serif;pointer-events:none}
   .tip p{margin:0}
@@ -86,12 +91,13 @@
 <body>
 <div id="viewport"><div id="stage"><div id="popup"></div></div></div>
 <div id="zoom"></div>
+<div id="news"><div class="hint">📰 仔細看看這則報導（可以上下捲動），有沒有哪裡怪怪的？</div><div class="sc"><img alt="新聞報導"></div><button>看完了，繼續 →</button></div>
 <button id="sound" title="音效開關">🔊 音效：開</button>
 <button id="rankBtn" title="查看排行榜">🏆 排行榜</button>
 <div id="hud"></div>
 <div id="modal"><div class="card"></div></div>
 <div id="home">原作：李宜玲老師（Genially）・內新國小改編版</div>
-<script src="data.js?v=20261116d"></script>
+<script src="data.js?v=20261116e"></script>
 <script>
 /* ============================================================
    想再改文字？改這裡就好（左邊是原文、右邊是要換成的字）
@@ -309,6 +315,9 @@ function openZoom(node, e) {
   zoomEl.style.display = 'flex';
 }
 zoomEl.onclick = () => { zoomEl.style.display = 'none'; };
+const newsEl = document.getElementById('news'); let newsNext = null;
+function openNews(src, next) { newsEl.querySelector('img').src = src; newsEl.querySelector('.sc').scrollTop = 0; newsNext = next; newsEl.style.display = 'flex'; }
+newsEl.querySelector('button').onclick = () => { newsEl.style.display = 'none'; const f = newsNext; newsNext = null; if (f) f(); };
 
 /* ---------- tooltip ---------- */
 let tipNode = null;
@@ -345,7 +354,7 @@ function base(e, parentPos) {
   applyEffect(n, e);
   const it = e.interactivities || {};
   if (e._pulse) n.classList.add('pulse');
-  if (it.click) { n.classList.add('click'); n.addEventListener('click', ev => { ev.stopPropagation(); runAction(it.click, n, e); }); }
+  if (it.click) { n.classList.add('click'); n.addEventListener('click', ev => { ev.stopPropagation(); if (e._news) openNews(e._news, () => runAction(it.click, n, e)); else runAction(it.click, n, e); }); }
   if (it.hover) {
     const a = IA[it.hover];
     if (a && a.type === 'htmlTooltip') {
